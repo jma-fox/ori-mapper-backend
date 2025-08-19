@@ -17,7 +17,6 @@ def plot_ori_curve(chan_result):
     ax.set_ylim(0, 5)
     ax.grid(True, alpha=0.3)
 
-    ax.legend()
     plt.tight_layout()
     plt.close(fig)
 

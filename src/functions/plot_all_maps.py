@@ -65,9 +65,9 @@ def plot_all_maps(loc_result):
     ax.set_ylim(y_all.min() - pad_y, y_all.max() + pad_y)
 
     ax.set_aspect('equal', adjustable='box')
-    ax.grid(True, linestyle=':', linewidth=0.8)
     ax.set_xlabel('X position (dva)')
     ax.set_ylabel('Y position (dva)')
+    ax.grid(True, linestyle=':', linewidth=0.8)
 
     plt.tight_layout()
     plt.close(fig)
