@@ -9,17 +9,26 @@ from functions.get_onset_data import get_onset_data
 from functions.get_snip_data import get_snip_data
 from functions.get_loc_map import get_loc_map
 from functions.plot_loc_map import plot_loc_map
+from functions.plot_all_maps import plot_all_maps
+from functions.get_ori_curve import get_ori_curve
 from functions.plot_ori_curve import plot_ori_curve
+from functions.plot_all_curves import plot_all_curves
 
 
 def streamlit_ui():
     st.set_page_config(page_title="Map-Reader")
     st.title("Map-Reader")
 
-    if 'loc_data' not in st.session_state:
-        st.session_state.loc_data = None
-    if 'ori_data' not in st.session_state:
-        st.session_state.ori_data = None
+    if 'loc_map_plots' not in st.session_state:
+        st.session_state.loc_map_plots = None
+    if 'target_channels' not in st.session_state:
+        st.session_state.target_channels = None
+    if 'all_maps_plot' not in st.session_state:
+        st.session_state.all_maps_plot = None
+    if 'ori_curve_plots' not in st.session_state:
+        st.session_state.ori_curve_plots = None
+    if 'all_curves_plot' not in st.session_state:
+        st.session_state.all_curves_plot = None
 
     tdt_data_file = st.file_uploader("Choose .mat file", key=100)
     start_time = st.time_input('Set recording start time:')
@@ -27,8 +36,8 @@ def streamlit_ui():
     time_buffer = 120
     
     st.subheader("RF location")
-    loc_task_file = st.file_uploader("Choose .dat file", key=101)
-    if st.button('Submit', key=102):
+    loc_task_file = st.file_uploader("Choose .dat file", key=200)
+    if st.button('Submit', key=202):
 
         if tdt_data_file is None:
             st.warning("Please upload a MapWriter file.")
@@ -51,32 +60,39 @@ def streamlit_ui():
         data_list = [{'chan': chan, 'onset_data': onset_data, 'snip_data': snip_data} for chan in channels]
 
         with Pool() as pool:
-            res_list = list(pool.map(get_loc_map, data_list))
+            result_list = list(pool.map(get_loc_map, data_list))
+            loc_map_plots = list(pool.map(plot_loc_map, result_list))
 
-        loc_data = {}
-        for res in res_list:
-            loc_data.update(res)
+        target_channels = [r['chan'] for r in result_list if r['popt'] is not None]
+        result_list = [r for r in result_list if r['chan'] in target_channels]
 
-        st.session_state.loc_data = loc_data
+        all_maps_plot = plot_all_maps(result_list)
 
-    loc_data = st.session_state.loc_data
-    if loc_data is not None:
-        chan_id = st.slider("Select channel:", min_value=1, max_value=32, key=103)
-        if chan_id in loc_data.keys():
-            chan_res = loc_data[chan_id]
-            plot_loc_map(chan_id, chan_res)
-        else:
-            st.warning(f'No data available for channel {chan_id}')
+        st.session_state.loc_map_plots = loc_map_plots
+        st.session_state.target_channels = target_channels
+        st.session_state.all_maps_plot = all_maps_plot
+
+    loc_map_plots = st.session_state.loc_map_plots
+    if loc_map_plots is not None:
+        min_height = 540
+        height_set = st.slider('Container height:', min_value=min_height, max_value=(min_height * 3), key=203)
+        with st.container(height=height_set):
+            for plot in loc_map_plots:
+                st.pyplot(plot)
+
+    all_maps_plot = st.session_state.all_maps_plot
+    if all_maps_plot is not None:
+        st.pyplot(all_maps_plot)
 
     st.subheader("RF orientation")
-    ori_task_file = st.file_uploader("Choose .dat file", key=104)
-    if st.button('Submit', key=105):
+    ori_task_file = st.file_uploader("Choose .dat file", key=300)
+    if st.button('Submit', key=301):
 
         if tdt_data_file is None:
             st.warning("Please upload a MapWriter file.")
             return
 
-        if loc_task_file is None:
+        if ori_task_file is None:
             st.warning("Please upload a MapOri file.")
             return
 
@@ -89,23 +105,34 @@ def streamlit_ui():
         event_data = get_event_data(tdt_data, task_start, task_stop)
         onset_data = get_onset_data(task_data, event_data)
 
-        channels = sorted(snip_data['channels'].unique())
+        channels = [int(chan) for chan in sorted(snip_data['channels'].unique())]
         data_list = [{'chan': chan, 'onset_data': onset_data, 'snip_data': snip_data} for chan in channels]
 
         with Pool() as pool:
-            res_list = list(pool.map(get_loc_map, data_list))
+            result_list = list(pool.map(get_ori_curve, data_list))
+            ori_curve_plots = list(pool.map(plot_ori_curve, result_list))
 
-        ori_data = {}
-        for res in res_list:
-            ori_data.update(res)
+        target_channels = st.session_state.target_channels
+        if target_channels is not None:
+            result_list = [r for r in result_list if r['chan'] in target_channels]
 
-        st.session_state.ori_data = ori_data
+        all_curves_plot = plot_all_curves(result_list)
 
-    ori_data = st.session_state.ori_data
-    if ori_data is not None:    
-        chan_id = st.slider("Select channel:", min_value=1, max_value=32, key=106)
-        if chan_id in ori_data.keys():
-            chan_res = ori_data[chan_id]
-            plot_ori_curve(chan_id, chan_res)
-        else:
-            st.warning(f'No data available for channel {chan_id}')
+        st.session_state.ori_curve_plots = ori_curve_plots
+        st.session_state.all_curves_plot = all_curves_plot
+
+    ori_curve_plots = st.session_state.ori_curve_plots
+    if ori_curve_plots is not None:
+        min_height = 540
+        height_set = st.slider('Container height:', min_value=min_height, max_value=(min_height * 3), key=302)
+        with st.container(height=height_set):
+            for plot in ori_curve_plots:
+                st.pyplot(plot)
+
+    all_curves_plot = st.session_state.all_curves_plot
+    if all_curves_plot is not None:
+        st.pyplot(all_curves_plot)
+
+if __name__ == '__main__':
+    streamlit_ui()
+    
