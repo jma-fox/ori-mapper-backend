@@ -1,4 +1,3 @@
-from tdt import read_block
 import pandas as pd
 
 
