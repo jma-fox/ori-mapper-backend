@@ -4,6 +4,9 @@ import seaborn as sns
 
 
 def plot_all_curves(ori_curves):
+    if not ori_curves:
+        return None
+
     all_curves = pd.DataFrame(ori_curves).explode(['x_vals', 'y_vals'])
 
     fig, ax = plt.subplots(figsize=(6.5, 4.15))

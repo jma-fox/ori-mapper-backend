@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import streamlit as st
 
 
 def plot_loc_map(channel_result):

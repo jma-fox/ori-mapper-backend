@@ -13,7 +13,7 @@ from functions.plot_all_curves import plot_all_curves
 
 
 def ori_curve_viewer(tdt_data_file):
-    st.subheader("RF orientation")
+    st.subheader("RF Orientation")
     ori_task_file = st.file_uploader("Choose MapOri task file")
 
     if st.button('Submit', key=301):
@@ -40,7 +40,7 @@ def ori_curve_viewer(tdt_data_file):
 
         target_channels = st.session_state.target_channels
         if target_channels is not None:
-            ori_curves = [r for r in ori_curves if r['chan'] in target_channels]
+            ori_curves = [r for r in ori_curves if r['channel'] in target_channels]
 
         all_curves_plot = plot_all_curves(ori_curves)
 

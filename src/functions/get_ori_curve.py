@@ -12,7 +12,7 @@ def get_ori_curve(channel_data):
     ori_spike_counts = {}
     for _, trial_row in task_data.iterrows():
         onset_time = trial_row['GaborOnsetTm']
-        ori_val = trial_row['TargOri']
+        ori_val = trial_row['GaborOri']
         ori_key = (180 - abs(ori_val)) if ori_val < 0 else ori_val
 
         if ori_key not in ori_spike_counts:

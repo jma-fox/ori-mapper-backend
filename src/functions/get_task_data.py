@@ -1,5 +1,4 @@
 import pandas as pd
-from datetime import timedelta
 
 
 def get_task_data(task_file):

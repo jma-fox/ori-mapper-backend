@@ -2,7 +2,6 @@ import numpy as np
 from datetime import timedelta
 
 
-
 def _decode_matlab_u16(arr):
     a = np.array(arr, dtype=np.uint16).reshape(-1)
 

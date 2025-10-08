@@ -13,7 +13,7 @@ from functions.plot_all_maps import plot_all_maps
 
 
 def loc_map_viewer(tdt_data_file):
-    st.subheader("RF location")
+    st.subheader("RF Location")
     loc_task_file = st.file_uploader("Choose MapLoc task file")
 
     if st.button('Submit', key=202):
