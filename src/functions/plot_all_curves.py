@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def plot_all_curves(ori_result):
-    all_curves = pd.DataFrame(ori_result).explode(['x_vals', 'y_vals'])
+def plot_all_curves(ori_curves):
+    all_curves = pd.DataFrame(ori_curves).explode(['x_vals', 'y_vals'])
 
     fig, ax = plt.subplots(figsize=(6.5, 4.15))
     sns.scatterplot(

@@ -1,27 +1,26 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
-import streamlit as st
 
 
-def plot_all_maps(loc_result):
+def plot_all_maps(loc_maps):
     sigma_level=1.0
 
     fig, ax = plt.subplots(figsize=(6.4, 6))
 
-    loc_maps = []
+    map_fits = []
     channels = []
-    for result in loc_result:
-        if result['popt'] is None:
+    for loc_map in loc_maps:
+        if loc_map['popt'] is None:
             continue
-        A, x0, y0, sx, sy, offset = result['popt']
+        A, x0, y0, sx, sy, offset = loc_map['popt']
         if not np.isfinite([A, x0, y0, sx, sy, offset]).all():
             continue
-        chan = result['chan']
-        loc_maps.append((chan, A, x0, y0, sx, sy, offset))
-        channels.append(chan)
+        channel = loc_map['channel']
+        map_fits.append((channel, A, x0, y0, sx, sy, offset))
+        channels.append(channel)
 
-    if not loc_maps:
+    if not map_fits:
         return None
 
     colors = {}
@@ -30,7 +29,7 @@ def plot_all_maps(loc_result):
         colors[chan] = cmap(i % cmap.N)
 
     x_all, y_all = [], []
-    for (chan, A, x0, y0, sx, sy, offset) in loc_maps:
+    for (chan, A, x0, y0, sx, sy, offset) in map_fits:
         w = 2 * sigma_level * abs(sx)
         h = 2 * sigma_level * abs(sy)
         e = Ellipse(
@@ -45,7 +44,8 @@ def plot_all_maps(loc_result):
             label=chan
         )
         ax.add_patch(e)
-        x_all.append(x0); y_all.append(y0)
+        x_all.append(x0)
+        y_all.append(y0)
 
     ax.legend(
         title='Channel', 
@@ -57,8 +57,8 @@ def plot_all_maps(loc_result):
     )
 
     x_all, y_all = np.array(x_all), np.array(y_all)
-    max_sx = max(abs(e[4]) for e in loc_maps)
-    max_sy = max(abs(e[5]) for e in loc_maps)
+    max_sx = max(abs(e[4]) for e in map_fits)
+    max_sy = max(abs(e[5]) for e in map_fits)
     pad_x = 2 * max_sx
     pad_y = 2 * max_sy
     ax.set_xlim(x_all.min() - pad_x, x_all.max() + pad_x)

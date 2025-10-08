@@ -1,26 +1,26 @@
 import numpy as np
 
 
-def get_ori_curve(chan_data):
-    chan = chan_data['chan']
-    onset_data = chan_data['onset_data']
-    snip_data = chan_data['snip_data']
-    chan_snips = snip_data[snip_data['channels'] == chan]
+def get_ori_curve(channel_data):
+    channel = channel_data['channel']
+    task_data = channel_data['task_data']
+    snip_data = channel_data['snip_data']
+    channel_snips = snip_data[snip_data['channels'] == channel]
 
-    t_window=(0.05, 0.2)
+    t_window=(0.0, 0.2)
 
     ori_spike_counts = {}
-    for _, trial_row in onset_data.iterrows():
-        onset_time = trial_row['OnsetTm']
+    for _, trial_row in task_data.iterrows():
+        onset_time = trial_row['GaborOnsetTm']
         ori_val = trial_row['TargOri']
         ori_key = (180 - abs(ori_val)) if ori_val < 0 else ori_val
 
         if ori_key not in ori_spike_counts:
             ori_spike_counts[ori_key] = []
 
-        spikes_in_window = chan_snips[
-            (chan_snips['times'] >= onset_time + t_window[0]) &
-            (chan_snips['times'] <= onset_time + t_window[1])
+        spikes_in_window = channel_snips[
+            (channel_snips['times'] >= onset_time + t_window[0]) &
+            (channel_snips['times'] <= onset_time + t_window[1])
         ]
 
         ori_spike_counts[ori_key].append(len(spikes_in_window))
@@ -37,6 +37,6 @@ def get_ori_curve(chan_data):
     x_vals = x_vals[sort_idx]
     y_vals = y_vals[sort_idx]
 
-    chan_result = {'chan': chan, 'x_vals': x_vals, 'y_vals': y_vals}
-    
-    return chan_result
+    channel_result = {'channel': channel, 'x_vals': x_vals, 'y_vals': y_vals}
+
+    return channel_result

@@ -4,42 +4,49 @@ from scipy.optimize import curve_fit
 
 def gaussian_2d(coords, A, x0, y0, sigma_x, sigma_y, offset):
     x, y = coords
-    return A * np.exp(
-        -(((x - x0) ** 2) / (2 * sigma_x**2) + ((y - y0) ** 2) / (2 * sigma_y**2))
-    ) + offset
+    fit = A * np.exp(-(((x - x0) ** 2) / (2 * sigma_x**2) + ((y - y0) ** 2) / (2 * sigma_y**2))) + offset
+
+    return fit
 
 def _build_heatmap_from_counts(pos_spike_counts):
-    """Return (grid_x, grid_y, grid_z) using mean spike counts at each (x,y) bin."""
-    # unique sorted axes from the keys you already binned into
     xs = sorted({x for (x, _) in pos_spike_counts.keys()})
     ys = sorted({y for (_, y) in pos_spike_counts.keys()})
     x_idx = {x:i for i, x in enumerate(xs)}
     y_idx = {y:i for i, y in enumerate(ys)}
     Z = np.full((len(ys), len(xs)), np.nan, dtype=float)
+
     for (x, y), counts in pos_spike_counts.items():
         Z[y_idx[y], x_idx[x]] = float(np.mean(counts))
+
     grid_x, grid_y = np.meshgrid(np.array(xs, dtype=float), np.array(ys, dtype=float))
+
     return grid_x, grid_y, Z
 
-def get_loc_map(chan_data):
-    chan, onset_data, snip_data = chan_data['chan'], chan_data['onset_data'], chan_data['snip_data']
-    chan_snips = snip_data[snip_data['channels'] == chan]
+def get_loc_map(channel_data):
+    channel = channel_data['channel']
+    task_data = channel_data['task_data']
+    snip_data = channel_data['snip_data']
+    channel_snips = snip_data[snip_data['channels'] == channel]
 
-    t_window = (0.05, 0.2)
+    t_window = (0.0, 0.2)
     bin_res = 1.0
 
     # collect spike counts per (x,y) position (already binned to bin_res)
     pos_spike_counts = {}
-    for _, trial_row in onset_data.iterrows():
-        onset_time = trial_row['OnsetTm']
-        xpos, ypos = trial_row['TargPosX'], trial_row['TargPosY']
+    for _, trial_row in task_data.iterrows():
+        onset_time = trial_row['GaborOnsetTm']
+        xpos = trial_row['TargPosX']
+        ypos = trial_row['TargPosY']
+
         pos_key = (round(xpos / bin_res) * bin_res, round(ypos / bin_res) * bin_res)
         if pos_key not in pos_spike_counts:
             pos_spike_counts[pos_key] = []
-        spikes_in_window = chan_snips[
-            (chan_snips['times'] >= onset_time + t_window[0]) &
-            (chan_snips['times'] <= onset_time + t_window[1])
+
+        spikes_in_window = channel_snips[
+            (channel_snips['times'] >= onset_time + t_window[0]) &
+            (channel_snips['times'] <= onset_time + t_window[1])
         ]
+
         pos_spike_counts[pos_key].append(len(spikes_in_window))
 
     # prepare x,y,z arrays from the mean counts
@@ -48,6 +55,7 @@ def get_loc_map(chan_data):
         x_vals.append(x)
         y_vals.append(y)
         z_vals.append(np.mean(counts))
+
     x_vals = np.array(x_vals, dtype=float)
     y_vals = np.array(y_vals, dtype=float)
     z_vals = np.array(z_vals, dtype=float)
@@ -55,14 +63,13 @@ def get_loc_map(chan_data):
     # Always compute the original heatmap grids (for fallback and optional inspection)
     hm_grid_x, hm_grid_y, hm_grid_z = _build_heatmap_from_counts(pos_spike_counts)
 
-    chan_result = {
-        'chan': chan,
-        'heatmap_grid_x': hm_grid_x,   # optional: expose the raw heatmap grid
+    channel_result = {
+        'channel': channel,
+        'heatmap_grid_x': hm_grid_x,
         'heatmap_grid_y': hm_grid_y,
         'heatmap_grid_z': hm_grid_z,
     }
 
-    # Try a Gaussian fit only if we have enough distinct points and some variance
     can_fit = (
         len(z_vals) >= 6 and
         np.isfinite(z_vals).all() and
@@ -71,9 +78,9 @@ def get_loc_map(chan_data):
 
     if not can_fit:
         # Fallback: use the original heat map as the main output
-        chan_result.update({'grid_x': hm_grid_x, 'grid_y': hm_grid_y,
+        channel_result.update({'grid_x': hm_grid_x, 'grid_y': hm_grid_y,
                             'grid_z': hm_grid_z, 'popt': None})
-        return chan_result
+        return channel_result
 
     try:
         # set reasonable initial guess and bounds (positive sigmas)
@@ -103,11 +110,11 @@ def get_loc_map(chan_data):
         grid_z = gaussian_2d((grid_x, grid_y), *popt).reshape(grid_x.shape)
 
         # Success: return Gaussian surface
-        chan_result.update({'grid_x': grid_x, 'grid_y': grid_y,
+        channel_result.update({'grid_x': grid_x, 'grid_y': grid_y,
                             'grid_z': grid_z, 'popt': popt})
     except Exception:
         # Fallback: return the original spike-count heat map
-        chan_result.update({'grid_x': hm_grid_x, 'grid_y': hm_grid_y,
+        channel_result.update({'grid_x': hm_grid_x, 'grid_y': hm_grid_y,
                             'grid_z': hm_grid_z, 'popt': None})
 
-    return chan_result
+    return channel_result
