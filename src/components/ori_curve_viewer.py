@@ -26,11 +26,7 @@ def ori_curve_viewer(tdt_data_file):
             return
         
         tdt_data = get_tdt_data(tdt_data_file)
-        start_time = get_start_time(tdt_data)
-
         task_data = get_task_data(ori_task_file)
-        task_data = ref_onset_times(task_data, start_time)
-
         snip_data = get_snip_data(tdt_data)
         ori_data = get_ori_data(task_data, snip_data)
 
@@ -48,14 +44,12 @@ def ori_curve_viewer(tdt_data_file):
         st.session_state.all_curves_plot = all_curves_plot
 
     ori_curve_plots = st.session_state.ori_curve_plots
+    all_curves_plot = st.session_state.all_curves_plot
 
     if ori_curve_plots is not None:
         with st.expander("Orientation Curves", expanded=True):
-
             for plot in ori_curve_plots:
                 st.pyplot(plot)
-
-    all_curves_plot = st.session_state.all_curves_plot
 
     if all_curves_plot is not None:
         st.pyplot(all_curves_plot)

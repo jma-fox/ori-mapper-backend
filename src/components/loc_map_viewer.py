@@ -26,11 +26,7 @@ def loc_map_viewer(tdt_data_file):
             return
         
         tdt_data = get_tdt_data(tdt_data_file)
-        start_time = get_start_time(tdt_data)
-
         task_data = get_task_data(loc_task_file)
-        task_data = ref_onset_times(task_data, start_time)
-
         snip_data = get_snip_data(tdt_data)
         loc_data = get_loc_data(task_data, snip_data)
 
@@ -48,14 +44,12 @@ def loc_map_viewer(tdt_data_file):
         st.session_state.all_maps_plot = all_maps_plot
 
     loc_map_plots = st.session_state.loc_map_plots
+    all_maps_plot = st.session_state.all_maps_plot
 
     if loc_map_plots is not None:
         with st.expander("Location Maps", expanded=True):
-            
             for plot in loc_map_plots:
                 st.pyplot(plot)
-
-    all_maps_plot = st.session_state.all_maps_plot
 
     if all_maps_plot is not None:
         st.pyplot(all_maps_plot)
