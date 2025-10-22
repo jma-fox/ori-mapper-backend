@@ -6,14 +6,15 @@ def get_ori_curve(channel_data):
     task_data = channel_data['task_data']
     snip_data = channel_data['snip_data']
     channel_snips = snip_data[snip_data['channels'] == channel]
+    event_name = channel_data["event_name"]
 
-    t_window=(0.0, 0.2)
+    t_window=(0.0, 1.0)
 
     ori_spike_counts = {}
     for _, trial_row in task_data.iterrows():
-        onset_time = trial_row['GaborOnsetTm']
+        onset_time = trial_row[event_name]
         ori_val = trial_row['GaborOri']
-        ori_key = (180 - abs(ori_val)) if ori_val < 0 else ori_val
+        ori_key = ori_val #(180 - abs(ori_val)) if ori_val < 0 else ori_val
 
         if ori_key not in ori_spike_counts:
             ori_spike_counts[ori_key] = []

@@ -14,7 +14,7 @@ def plot_all_curves(ori_curves):
         data=all_curves,
         x='x_vals', 
         y='y_vals',
-        hue='chan',
+        hue='channel',
         palette='tab20',
         s=50,
         ax=ax,

@@ -12,10 +12,9 @@ def plot_ori_curve(channel_result):
     ax.set_xlabel('Orientation (degrees)')
     ax.set_ylabel('Spike Count')
     ax.set_xlim(min(x_vals) - 10, max(x_vals) + 10)
-    ax.set_ylim(0, 5)
     ax.grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.close(fig)
 
-    return fig
+    return channel, fig
