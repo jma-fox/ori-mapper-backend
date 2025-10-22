@@ -17,7 +17,7 @@ def streamlit_app():
     if 'ori_curves' not in st.session_state:
         st.session_state.ori_curves = None
 
-    loc_task_file = st.file_uploader("Choose MapLoc task file")
+    ori_task_file = st.file_uploader("Choose MapOri task file")
     tdt_data_file = st.file_uploader("Choose TDT data file")
 
     st.write("")
@@ -28,7 +28,7 @@ def streamlit_app():
 
     if st.button('Load Map Data'):
         tdt_data = get_tdt_data(tdt_data_file)
-        task_data = get_task_data(loc_task_file)
+        task_data = get_task_data(ori_task_file)
         snip_data = get_snip_data(tdt_data)
         ori_data = get_ori_data(task_data, snip_data, event_name)
 
